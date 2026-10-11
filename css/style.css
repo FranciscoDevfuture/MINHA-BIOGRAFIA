@@ -6,6 +6,13 @@
 
 }
 
+/* CORREÇÃO MOBILE: o menu fica fixo no topo, então ao clicar num link
+   o título da seção não pode ficar escondido atrás dele */
+html {
+    scroll-padding-top: 80px;
+    -webkit-text-size-adjust: 100%;
+}
+
 body {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     background-image: url(../assets/img/background.jpeg);
@@ -16,13 +23,19 @@ body {
     line-height: 1.7;
 }
 
+/* CORREÇÃO MOBILE: nenhuma imagem passa da largura da tela */
+img {
+    max-width: 100%;
+}
+
 /* 2. Estilo do Cabeçalho com Gradiente*/
 header {
     background:linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
     color: #ffffff;
     text-align: center;
-    padding: 50px, 20px, 40px;
-
+    /* CORREÇÃO MOBILE: o padding estava com vírgulas ("50px, 20px, 40px"),
+       o que é inválido e fazia o navegador ignorar tudo.
+       O padding foi para o .header-container (mais abaixo). */
 }
 
 /* --- 4. CARTÕES COM EFEITO DE HOVER E BORDER DA LINHA DO TEMPO --- */
@@ -47,7 +60,10 @@ main {
 /* Cada cartão individual (Foto + Texto) */
 .card-item {
     flex: 1;                   /* Faz os dois cartões dividirem o espaço igualmente */
-    min-width: 250px;          /* Largura mínima para não espremer em telas menores */
+    /* CORREÇÃO MOBILE: min-width fixo de 250px estourava a tela em celulares
+       estreitos (o espaço útil do card chega a ~224px em 320px de largura).
+       min() deixa o card encolher quando não há espaço. */
+    min-width: min(250px, 100%);
     max-width: 350px;          /* Largura máxima de cada cartão */
     display: flex;
     flex-direction: column;    /* Mantém a imagem em cima e o texto embaixo DENTRO do card */
@@ -57,8 +73,13 @@ main {
 
 /* Estilo padronizado para as imagens dos cartões */
 .card-item img {
-    width: 250px;
-    height: 260px;             /* Define uma altura padrão para ficarem do mesmo tamanho */
+    /* CORREÇÃO MOBILE: antes era width: 250px / height: 260px fixos.
+       Agora a foto ocupa até 250px, mas encolhe junto com o card
+       mantendo a mesma proporção (250x260). */
+    width: 100%;
+    max-width: 250px;
+    height: auto;
+    aspect-ratio: 250 / 260;
     object-fit: cover;         /* Recorta a imagem proporcionalmente sem distorcer ou esticar */
     border-radius: 12px; 
     box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);      
@@ -86,11 +107,13 @@ main {
 .header-container{
     max-width: 800px;
     margin:0 auto;
+    /* CORREÇÃO MOBILE: padding que antes estava (inválido) no header */
+    padding: 50px 20px 40px;
 }
 
 .foto-perfil-img{
     width: 130px;
-    height:140px;
+    height: 130px;            /* CORREÇÃO: era 140px, deixava a foto oval */
     border-radius: 50%;
     border: 4px solid rgba(255,255,255, 0.3);
     object-fit: cover;
@@ -114,6 +137,14 @@ header h1 {
     font-weight: 700;
 }
 
+/* "Minha Biografia" acima do nome (no HTML novo é um <p>, não mais um <h1>) */
+.pagina-titulo {
+    margin: 15px 0 0 0;
+    font-size: 0.95rem;
+    font-weight: 400;
+    color: #93c5fd;
+}
+
 .subtitulo {
     color: #93c5fd;
     font-size: 1.1rem;
@@ -133,7 +164,7 @@ header h1 {
 }
 
 .badge{
-    background-color: rgba(255,255, 255, 0.15);
+    background-color: rgba(255,255,255, 0.15);
     padding: 5px 14px;
     border-radius: 20px;
     font-size: 0.85rem;
@@ -144,13 +175,24 @@ header h1 {
 .nav-menu{
     background-color: #ffffff;
     display: flex;
-    justify-content: center;
+    /* CORREÇÃO MOBILE: com 5 links o menu passa de 450px de largura.
+       Antes não tinha como rolar nem quebrar linha, então os links
+       eram espremidos ou saíam da tela. Agora rola de lado no celular
+       (e fica centralizado em telas maiores, no @media do final). */
+    justify-content: flex-start;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
     gap: 15px;
     padding: 12px;
     box-shadow: 0 4px 6px -1px rgba(0,0,0,0.5);
     position: sticky;
     top: 0;
     z-index: 100;
+}
+
+.nav-menu::-webkit-scrollbar {
+    display: none;
 }
 
 .nav-menu a {
@@ -161,6 +203,12 @@ header h1 {
     padding:6px 12px;
     border-radius: 6px;
     transition: all 0.2s ease;
+    /* CORREÇÃO MOBILE: não quebra o texto do link e garante área de toque de 44px */
+    flex: 0 0 auto;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
 }
 
 .nav-menu a:hover{
@@ -183,20 +231,26 @@ main {
     border-radius: 12px;
     border-left: 5px solid #2563eb;/*linha azull na lateral*/
     box-shadow: 0 4px 6px -1px rgba(0,0,0,0.5), 0 2px 4px -1px rgba(0,0,0,0.3);
-    transition: transform 0.25s ease; box-shadow: 0.25s ease;
+    /* CORREÇÃO: "box-shadow: 0.25s ease" era inválido e foi ignorado,
+       então a sombra nunca animava. */
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
 
 }
 
 
 /*Efeito de elevação nos cards*/
+/* CORREÇÃO MOBILE: 1) translate(-4px) movia o card 4px para a ESQUERDA
+   (o certo é translateY, para subir). 2) No celular o :hover "gruda"
+   depois do toque, então o efeito só vale em telas com mouse. */
+@media (hover: hover) {
+    .linha-tempo-card:hover{
+        transform: translateY(-4px);
+        box-shadow: 0 12px 20px -3px rgba(0,0,0, 0.08);
 
-
-.linha-tempo-card:hover{
-    transform:translate(-4px);
-    box-shadow: 0 12px 20px -3px rgba(0,0,0, 0.08);
-
+    }
 }
 
+.linha-tempo-card h2,
 .linha-tempo-card h3{
     color:#1e3a8a;
     font-size: 1.3rem;
@@ -216,6 +270,7 @@ section {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
+section h2,
 section h3 {
     color: #1a365d;
     border-bottom: 2px solid #e2e8f0;
@@ -258,7 +313,7 @@ section h3 {
     font-size: 1.2rem;
     color: #64748b;
     margin-top: 6px;
-    font-weight: 600px;
+    font-weight: 600;         /* CORREÇÃO: era "600px", valor inválido */
 }
 
 /*foto unica centralizado*/
@@ -283,3 +338,62 @@ footer {
     margin-top: 50px;
 }
 
+
+/* ==========================================================
+   CORREÇÃO MOBILE — ajustes por tamanho de tela
+   (ficam por último para vencer as regras acima)
+   ========================================================== */
+
+/* Telas médias e grandes: menu centralizado */
+@media (min-width: 640px) {
+    .nav-menu {
+        justify-content: center;
+    }
+}
+
+/* Celulares */
+@media (max-width: 600px) {
+    .header-container {
+        padding: 35px 16px 30px;
+    }
+
+    header h1 {
+        font-size: 1.7rem;
+        line-height: 1.25;
+    }
+
+    .subtitulo {
+        font-size: 1rem;
+        line-height: 1.5;
+    }
+
+    .nav-menu {
+        gap: 6px;
+        padding: 8px 10px;
+    }
+
+    main {
+        margin: 20px auto;
+        padding: 0 12px;
+    }
+
+    /* mais espaço útil para o texto dentro dos cards */
+    .linha-tempo-card {
+        padding: 20px 16px;
+        margin-bottom: 18px;
+    }
+
+    .linha-tempo-card h2,
+    .linha-tempo-card h3 {
+        font-size: 1.2rem;
+    }
+
+    .cards-container {
+        gap: 16px;
+    }
+
+    footer {
+        padding: 24px 16px;
+        margin-top: 30px;
+    }
+}
